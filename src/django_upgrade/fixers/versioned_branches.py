@@ -71,9 +71,8 @@ def _is_passing_comparison(
     elif isinstance(test.ops[0], ast.Lt):
         if state.settings.target_version >= min_version:
             return "second"
-    else:  # ast.LtE
-        if state.settings.target_version > min_version:
-            return "second"
+    elif state.settings.target_version > min_version:
+        return "second"
     return None
 
 

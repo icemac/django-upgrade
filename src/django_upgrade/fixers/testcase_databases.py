@@ -43,10 +43,6 @@ def visit_Assign(
 def replace_assignment(
     tokens: list[Token], i: int, *, node: ast.Assign, value: bool
 ) -> None:
-    new_src = "databases = "
-    if value:
-        new_src += '"__all__"'
-    else:
-        new_src += "[]"
+    new_src = "databases = " + ('"__all__"' if value else "[]")
     j = find_last_token(tokens, i, node=node)
     tokens[i : j + 1] = [Token(name=CODE, src=new_src)]

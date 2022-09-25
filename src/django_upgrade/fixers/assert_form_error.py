@@ -37,45 +37,37 @@ def visit_Call(
     parents: list[ast.AST],
 ) -> Iterable[tuple[Offset, TokenFunc]]:
     if (
-        isinstance(node.func, ast.Attribute)
-        and (func_name := node.func.attr) in ("assertFormError", "assertFormsetError")
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "self"
-        and arguments_match(node, func_name)
-        and (
-            (
-                isinstance((second_arg := node.args[1]), ast.Constant)
-                and isinstance(second_arg.value, str)
-            )
-            or isinstance(second_arg, ast.Name)
+        not isinstance(node.func, ast.Attribute)
+        or (func_name := node.func.attr)
+        not in ("assertFormError", "assertFormsetError")
+        or not isinstance(node.func.value, ast.Name)
+        or node.func.value.id != "self"
+        or not arguments_match(node, func_name)
+        or (
+            not isinstance((second_arg := node.args[1]), ast.Constant)
+            or not isinstance(second_arg.value, str)
         )
-        and isinstance((first_arg := node.args[0]), ast.Name)
-        # Detect response arguments either from some hardcoded names, or by
-        # looking back in current function for assignment from self.client.*()
-        # Necessary because new signature with msg_prefix overlaps old one
-        and (
-            "response" in first_arg.id
-            or first_arg.id in ("resp", "res", "r")
-            or is_response_from_client(parents, node, first_arg.id)
-        )
+        and not isinstance(second_arg, ast.Name)
+        or not isinstance((first_arg := node.args[0]), ast.Name)
+        or "response" not in first_arg.id
+        and first_arg.id not in ("resp", "res", "r")
+        and not is_response_from_client(parents, node, first_arg.id)
     ):
-        yield ast_start_offset(first_arg), partial(
-            rewrite_args,
-            response_arg=first_arg,
-            form_arg=second_arg,
-        )
+        return
+    yield ast_start_offset(first_arg), partial(
+        rewrite_args,
+        response_arg=first_arg,
+        form_arg=second_arg,
+    )
 
-        if func_name == "assertFormError":
-            errors_idx = 3
-        else:
-            errors_idx = 4
-        try:
-            errors_arg = node.args[errors_idx]
-        except IndexError:
-            errors_arg = [k.value for k in node.keywords if k.arg == "errors"][0]
+    errors_idx = 3 if func_name == "assertFormError" else 4
+    try:
+        errors_arg = node.args[errors_idx]
+    except IndexError:
+        errors_arg = [k.value for k in node.keywords if k.arg == "errors"][0]
 
-        if isinstance(errors_arg, ast.Constant) and errors_arg.value is None:
-            yield ast_start_offset(errors_arg), partial(replace, src="[]")
+    if isinstance(errors_arg, ast.Constant) and errors_arg.value is None:
+        yield ast_start_offset(errors_arg), partial(replace, src="[]")
 
 
 def arguments_match(node: ast.Call, func_name: str) -> bool:
@@ -143,9 +135,7 @@ class ResponseAssignmentVisitor(ast.NodeVisitor):
         self.generic_visit(self.funcdef)
 
     def visit(self, node: ast.AST) -> Any:
-        if self.stop_search:
-            return None
-        return super().visit(node)
+        return None if self.stop_search else super().visit(node)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         # Avoid descending into a new scope
@@ -234,5 +224,5 @@ def rewrite_args(
     del tokens[j : k + 1]
     rtoken = tokens[i]
     tokens[i] = rtoken._replace(
-        src=rtoken.src + ".context[" + tokens_to_src(ftokens) + "]",
+        src=f"{rtoken.src}.context[{tokens_to_src(ftokens)}]"
     )

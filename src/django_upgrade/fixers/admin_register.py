@@ -177,7 +177,7 @@ def visit_Call(
         if (
             admin_details is not None
             and admin_details.parent == parents[-2]
-            and not (site_name and not admin_name.endswith("Admin"))
+            and (not site_name or admin_name.endswith("Admin"))
         ):
             admin_details.model_names_per_site.setdefault(site_name, set()).update(
                 model_names

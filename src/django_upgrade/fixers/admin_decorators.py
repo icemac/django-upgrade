@@ -84,11 +84,7 @@ def visit_Module_or_ClassDef(
 
     # Display functions take one arg (the model instance), but will also take
     # self inside classes
-    if isinstance(node, ast.Module):
-        display_func_args = 1
-    else:
-        display_func_args = 2
-
+    display_func_args = 1 if isinstance(node, ast.Module) else 2
     # Check for 'from django.contrib import admin' from state.from_imports,
     # but also directly when visiting a module. state.from_imports isn’t
     # populated yet when visiting a module... (could fix by doing two passes?)

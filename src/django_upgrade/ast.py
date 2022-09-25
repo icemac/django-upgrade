@@ -19,4 +19,4 @@ def ast_start_offset(node: ast.expr | ast.keyword | ast.stmt) -> Offset:
 
 def is_rewritable_import_from(node: ast.ImportFrom) -> bool:
     # Not relative import or import *
-    return node.level == 0 and not (len(node.names) == 1 and node.names[0].name == "*")
+    return node.level == 0 and (len(node.names) != 1 or node.names[0].name != "*")

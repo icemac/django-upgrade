@@ -100,9 +100,7 @@ def update_django_conf_import(
 def update_django_urls_import(
     tokens: list[Token], i: int, *, node: ast.ImportFrom, state: State
 ) -> None:
-    used_names = state_used_names.pop(state, set())
-
-    if used_names:
+    if used_names := state_used_names.pop(state, set()):
         initial_names = state.from_imports["django.urls"] - {"re_path"}
         used_names.update(initial_names)
 
@@ -198,9 +196,4 @@ def convert_path_syntax(regex_path: str) -> str | None:
     path += remaining
 
     dashless_path = path.replace("-", "")
-    if re.escape(dashless_path) != dashless_path:
-        # path still contains regex special characters
-        # dashes are ignored as they only have meaning in regexes within []
-        return None
-
-    return path
+    return None if re.escape(dashless_path) != dashless_path else path

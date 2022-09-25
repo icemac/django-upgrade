@@ -192,10 +192,7 @@ class Block:  # pragma: no cover
         self.line = line
 
     def _initial_indent(self, tokens: list[Token]) -> int:
-        if tokens[self.start].src.isspace():
-            return len(tokens[self.start].src)
-        else:
-            return 0
+        return len(tokens[self.start].src) if tokens[self.start].src.isspace() else 0
 
     def _minimum_indent(self, tokens: list[Token]) -> int:
         block_indent: int | None = None
@@ -288,10 +285,7 @@ class Block:  # pragma: no cover
                 level += {"INDENT": 1, "DEDENT": -1}.get(tokens[j].name, 0)
                 j += 1
             ret = cls(start, colon, block, j, line=False)
-            if trim_end:
-                return ret._trim_end(tokens)
-            else:
-                return ret
+            return ret._trim_end(tokens) if trim_end else ret
         else:  # single line block
             block = j
             j = find_end(tokens, j)

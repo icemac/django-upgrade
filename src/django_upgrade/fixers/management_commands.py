@@ -35,8 +35,5 @@ def visit_Assign(
         and (node.value.value is True or node.value.value is False)
         and state.looks_like_command_file()
     ):
-        if node.value.value:
-            new_src = '"__all__"'
-        else:
-            new_src = "[]"
+        new_src = '"__all__"' if node.value.value else "[]"
         yield ast_start_offset(node.value), partial(replace, src=new_src)

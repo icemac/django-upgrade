@@ -7,7 +7,4 @@ if sys.version_info >= (3, 9):
 else:
 
     def str_removeprefix(self: str, prefix: str, /) -> str:  # pragma: no cover
-        if self.startswith(prefix):
-            return self[len(prefix) :]
-        else:
-            return self[:]
+        return self[len(prefix) :] if self.startswith(prefix) else self[:]

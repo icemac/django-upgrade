@@ -42,23 +42,24 @@ def visit_ImportFrom(
     node: ast.ImportFrom,
     parents: list[ast.AST],
 ) -> Iterable[tuple[Offset, TokenFunc]]:
-    if node.module == MODULE and is_rewritable_import_from(node):
-        name_map = {}
-        urllib_names = {}
-        for alias in node.names:
-            if alias.name in RENAMES:
-                name_map[alias.name] = RENAMES[alias.name]
-            elif alias.name in URLLIB_NAMES:
-                name_map[alias.name] = ""
-                urllib_names[alias.name] = alias.asname
+    if node.module != MODULE or not is_rewritable_import_from(node):
+        return
+    name_map = {}
+    urllib_names = {}
+    for alias in node.names:
+        if alias.name in RENAMES:
+            name_map[alias.name] = RENAMES[alias.name]
+        elif alias.name in URLLIB_NAMES:
+            name_map[alias.name] = ""
+            urllib_names[alias.name] = alias.asname
 
-        if name_map:
-            yield ast_start_offset(node), partial(
-                fix_import,
-                node=node,
-                name_map=name_map,
-                urllib_names=urllib_names,
-            )
+    if name_map:
+        yield ast_start_offset(node), partial(
+            fix_import,
+            node=node,
+            name_map=name_map,
+            urllib_names=urllib_names,
+        )
 
 
 def fix_import(

@@ -94,9 +94,7 @@ def fix_file(
         with open(filename, "w", encoding="UTF-8", newline="") as f:
             f.write(contents_text)
 
-    if exit_zero_even_if_changed:
-        return 0
-    return contents_text != contents_text_orig
+    return 0 if exit_zero_even_if_changed else contents_text != contents_text_orig
 
 
 def apply_fixers(contents_text: str, settings: Settings, filename: str) -> str:
